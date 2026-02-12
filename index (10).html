@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIDI Generator Pro</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="toast" class="toast"></div>
+    
+    <div class="container">
+        <h1>🎵 MIDI Generator Pro</h1>
+        <p class="subtitle">Создавайте многоголосную музыку прямо в браузере | Финальная версия v2.1</p>
+        
+        <!-- Quick Presets -->
+        <div class="presets-section" id="presetsSection">
+            <h3>⚡ Быстрые пресеты</h3>
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="loadPreset('scale')">🎼 Гамма C Major</button>
+                <button class="preset-btn" onclick="loadPreset('chords')">🎹 Последовательность аккордов</button>
+                <button class="preset-btn" onclick="loadPreset('melody')">🎵 Простая мелодия</button>
+                <button class="preset-btn" onclick="loadPreset('piano')">🎹 Мелодия + Аккорды</button>
+            </div>
+        </div>
+        
+        <div class="main-grid">
+            <!-- Left Column -->
+            <div>
+                <div class="control-panel">
+                    <h3 style="margin-bottom: 15px; color: #333;">✏️ Добавить ноту/аккорд</h3>
+                    
+                    <div class="settings-row">
+                        <div class="control-group">
+                            <label>🎼 Нота:</label>
+                            <select id="noteSelect">
+                                <option value="48">C3 (До)</option>
+                                <option value="50">D3 (Ре)</option>
+                                <option value="52">E3 (Ми)</option>
+                                <option value="53">F3 (Фа)</option>
+                                <option value="55">G3 (Соль)</option>
+                                <option value="57">A3 (Ля)</option>
+                                <option value="59">B3 (Си)</option>
+                                <option value="60">C4 (До)</option>
+                                <option value="61">C#4 (До#)</option>
+                                <option value="62">D4 (Ре)</option>
+                                <option value="63">D#4 (Ре#)</option>
+                                <option value="64">E4 (Ми)</option>
+                                <option value="65">F4 (Фа)</option>
+                                <option value="66">F#4 (Фа#)</option>
+                                <option value="67">G4 (Соль)</option>
+                                <option value="68">G#4 (Соль#)</option>
+                                <option value="69">A4 (Ля)</option>
+                                <option value="70">A#4 (Ля#)</option>
+                                <option value="71">B4 (Си)</option>
+                                <option value="72">C5 (До)</option>
+                                <option value="74">D5 (Ре)</option>
+                                <option value="76">E5 (Ми)</option>
+                                <option value="77">F5 (Фа)</option>
+                                <option value="79">G5 (Соль)</option>
+                                <option value="81">A5 (Ля)</option>
+                                <option value="83">B5 (Си)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>⏱️ Длительность:</label>
+                            <select id="duration">
+                                <option value="384">🎵 Целая (1)</option>
+                                <option value="288">𝅗𝅥. Половинная с точкой</option>
+                                <option value="192">𝅗𝅥 Половинная (1/2)</option>
+                                <option value="144">♩. Четвертная с точкой</option>
+                                <option value="96" selected>♩ Четвертная (1/4)</option>
+                                <option value="72">♪. Восьмая с точкой</option>
+                                <option value="48">♪ Восьмая (1/8)</option>
+                                <option value="24">♬ Шестнадцатая</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>🔊 Громкость: <span id="velocityDisplay">100</span></label>
+                        <input type="range" id="velocity" value="100" min="0" max="127" 
+                               oninput="document.getElementById('velocityDisplay').textContent = this.value">
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn-add" onclick="addNote()">➕ Добавить ноту</button>
+                        <button class="btn-clear" onclick="clearNotes()">🗑️ Очистить все</button>
+                    </div>
+                </div>
+                
+                <!-- Chord Builder -->
+                <div class="chord-builder">
+                    <h4>🎹 Конструктор аккордов (одновременное звучание)</h4>
+                    <p style="font-size: 12px; margin-bottom: 10px; color: #1565c0;">Добавьте несколько нот, которые будут звучать вместе</p>
+                    <div class="chord-notes" id="chordNotes">
+                        <span style="color: #999; font-size: 12px;">Нет нот в аккорде</span>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn-add-to-chord" onclick="addToChord()">➕ В аккорд</button>
+                        <button class="btn-clear-chord" onclick="clearChord()">🔄 Очистить</button>
+                        <button class="btn-add" onclick="addChord()">✅ Добавить аккорд</button>
+                    </div>
+                </div>
+                
+                <!-- Keyboard Shortcuts -->
+                <div class="shortcuts">
+                    <h4>⌨️ Горячие клавиши</h4>
+                    <p>
+                        <kbd>Enter</kbd> - добавить ноту/аккорд | 
+                        <kbd>Space</kbd> - воспроизвести/остановить<br>
+                        <kbd>Ctrl+Del</kbd> - очистить | 
+                        <kbd>Ctrl+R</kbd> - развернуть | 
+                        <kbd>Ctrl+L</kbd> - переключить повтор
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Right Column -->
+            <div>
+                <!-- Player Section -->
+                <div class="player-section" id="playerSection">
+                    <h3 style="text-align: center; margin-bottom: 15px;">🎹 Проигрыватель</h3>
+                    
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalNotes">0</div>
+                            <div class="stat-label">Элементов</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalDuration">0s</div>
+                            <div class="stat-label">Длительность</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="currentTempo">120</div>
+                            <div class="stat-label">BPM</div>
+                        </div>
+                    </div>
+                    
+                    <div class="tempo-control">
+                        <span>🎚️ Темп:</span>
+                        <input type="range" id="tempoSlider" min="40" max="240" value="120" 
+                               oninput="updateTempo(this.value)">
+                        <span class="tempo-value" id="tempoValue">120 BPM</span>
+                    </div>
+                    
+                    <div class="instrument-selector">
+                        <label>🎸 Тембр:</label>
+                        <select id="waveform" onchange="updateWaveform(this.value)">
+                            <option value="sine">🎹 Синусоида (мягко)</option>
+                            <option value="square">🎸 Прямоугольник (ретро)</option>
+                            <option value="sawtooth">🎺 Пила (яркий)</option>
+                            <option value="triangle">🎻 Треугольник (теплый)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="visualizer" id="visualizer">
+                        <span>🎵</span>
+                        <div class="timeline" id="timeline"></div>
+                    </div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    
+                    <div class="piano-roll" id="pianoRoll"></div>
+                    
+                    <div class="player-controls">
+                        <button class="player-btn" id="playBtn" onclick="playMelody()" disabled>
+                            <span>▶️</span> Играть
+                        </button>
+                        <button class="player-btn" id="stopBtn" onclick="stopMelody()" disabled>
+                            <span>⏹️</span> Стоп
+                        </button>
+                        <button class="player-btn" id="loopBtn" onclick="toggleLoop()">
+                            <span id="loopIcon">🔁</span> Повтор
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="notes-section">
+            <h2>
+                <span>📝 Список нот и аккордов (<span id="noteCount">0</span>)</span>
+                <button class="player-btn" style="font-size: 12px; padding: 5px 15px;" onclick="reverseNotes()">
+                    🔄 Развернуть
+                </button>
+            </h2>
+            <div class="notes-list" id="notesList">
+                <div class="empty-state">
+                    <p>Нет добавленных нот</p>
+                    <p style="font-size: 14px; margin-top: 10px;">Добавьте ноты или выберите пресет</p>
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn-generate" id="generateBtn" onclick="generateMIDI()" disabled>
+            💾 Скачать MIDI файл
+        </button>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
