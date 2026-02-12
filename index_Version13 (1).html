@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIDI Generator Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .control-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-add {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-add:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .btn-clear {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .btn-clear:hover {
+            background: #ee5a52;
+            transform: translateY(-2px);
+        }
+        
+        .btn-generate {
+            background: #667eea;
+            color: white;
+            width: 100%;
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        
+        .btn-generate:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        .btn-generate:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .notes-section {
+            margin: 20px 0;
+        }
+        
+        .notes-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .notes-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 150px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .note-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            animation: slideIn 0.3s ease;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .note-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .note-item.playing {
+            background: #667eea;
+            color: white;
+            transform: scale(1.02);
+        }
+        
+        .note-item.playing .note-number {
+            background: white;
+            color: #667eea;
+        }
+        
+        .note-item.chord {
+            border-left: 4px solid #ffc107;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .note-info {
+            flex: 1;
+        }
+        
+        .note-number {
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+            font-weight: bold;
+            display: inline-block;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        .btn-delete {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-delete:hover {
+            background: #ee5a52;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+        }
+        
+        .settings-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        /* Player styles */
+        .player-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+        }
+        
+        .player-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .player-btn {
+            background: white;
+            color: #667eea;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .player-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .player-btn:disabled {
+            background: #ccc;
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .visualizer {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+            text-align: center;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+        
+        .piano-roll {
+            display: flex;
+            gap: 2px;
+            justify-content: center;
+            margin-top: 10px;
+            height: 60px;
+            align-items: flex-end;
+        }
+        
+        .piano-bar {
+            width: 20px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+        
+        .piano-bar.active {
+            background: white;
+            transform: scaleY(1.2);
+        }
+        
+        .tempo-control {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .tempo-control input[type="range"] {
+            flex: 1;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.3);
+            outline: none;
+        }
+        
+        .tempo-control input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .tempo-value {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .instrument-selector {
+            margin-top: 15px;
+        }
+        
+        .instrument-selector select {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .instrument-selector select option {
+            color: #333;
+        }
+        
+        /* Quick presets */
+        .presets-section {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .presets-section h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .preset-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .preset-btn {
+            background: #fff;
+            color: #856404;
+            border: 2px solid #ffc107;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .preset-btn:hover {
+            background: #ffc107;
+            color: white;
+        }
+        
+        /* Keyboard shortcuts */
+        .shortcuts {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+        
+        .shortcuts h4 {
+            color: #004085;
+            margin-bottom: 10px;
+        }
+        
+        .shortcuts kbd {
+            background: #004085;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        
+        /* Progress bar */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: white;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        /* Statistics */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        /* Note actions */
+        .note-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .btn-preview {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .btn-preview:hover {
+            background: #5568d3;
+        }
+        
+        .timeline {
+            margin-top: 15px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        /* Chord builder */
+        .chord-builder {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        
+        .chord-builder h4 {
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+        
+        .chord-notes {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            min-height: 40px;
+            align-items: center;
+        }
+        
+        .chord-note-tag {
+            background: #1976d2;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .chord-note-tag button {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0 5px;
+            width: auto;
+            font-size: 16px;
+            line-height: 1;
+            border-radius: 50%;
+        }
+        
+        .chord-note-tag button:hover {
+            background: rgba(255,255,255,0.5);
+        }
+        
+        .btn-add-to-chord {
+            background: #1976d2;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .btn-add-to-chord:hover {
+            background: #1565c0;
+        }
+        
+        .btn-clear-chord {
+            background: #ff9800;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .btn-clear-chord:hover {
+            background: #f57c00;
+        }
+        
+        .note-details {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .chord-indicator {
+            background: #ffc107;
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            margin-left: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 MIDI Generator Pro</h1>
+        <p class="subtitle">Создавайте многоголосную музыку прямо в браузере</p>
+        
+        <!-- Quick Presets -->
+        <div class="presets-section">
+            <h3>⚡ Быстрые пресеты</h3>
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="loadPreset('scale')">🎼 Гамма C Major</button>
+                <button class="preset-btn" onclick="loadPreset('chords')">🎹 Последовательность аккордов</button>
+                <button class="preset-btn" onclick="loadPreset('melody')">🎵 Простая мелодия</button>
+                <button class="preset-btn" onclick="loadPreset('piano')">🎹 Мелодия + Аккорды</button>
+            </div>
+        </div>
+        
+        <div class="main-grid">
+            <!-- Left Column -->
+            <div>
+                <div class="control-panel">
+                    <h3 style="margin-bottom: 15px; color: #333;">✏️ Добавить ноту/аккорд</h3>
+                    
+                    <div class="settings-row">
+                        <div class="control-group">
+                            <label>🎼 Нота:</label>
+                            <select id="noteSelect">
+                                <option value="48">C3 (До)</option>
+                                <option value="50">D3 (Ре)</option>
+                                <option value="52">E3 (Ми)</option>
+                                <option value="53">F3 (Фа)</option>
+                                <option value="55">G3 (Соль)</option>
+                                <option value="57">A3 (Ля)</option>
+                                <option value="59">B3 (Си)</option>
+                                <option value="60">C4 (До)</option>
+                                <option value="61">C#4 (До#)</option>
+                                <option value="62">D4 (Ре)</option>
+                                <option value="63">D#4 (Ре#)</option>
+                                <option value="64">E4 (Ми)</option>
+                                <option value="65">F4 (Фа)</option>
+                                <option value="66">F#4 (Фа#)</option>
+                                <option value="67">G4 (Соль)</option>
+                                <option value="68">G#4 (Соль#)</option>
+                                <option value="69">A4 (Ля)</option>
+                                <option value="70">A#4 (Ля#)</option>
+                                <option value="71">B4 (Си)</option>
+                                <option value="72">C5 (До)</option>
+                                <option value="74">D5 (Ре)</option>
+                                <option value="76">E5 (Ми)</option>
+                                <option value="77">F5 (Фа)</option>
+                                <option value="79">G5 (Соль)</option>
+                                <option value="81">A5 (Ля)</option>
+                                <option value="83">B5 (Си)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>⏱️ Длительность:</label>
+                            <select id="duration">
+                                <option value="384">🎵 Целая (1)</option>
+                                <option value="288">𝅗𝅥. Половинная с точкой</option>
+                                <option value="192">𝅗𝅥 Половинная (1/2)</option>
+                                <option value="144">♩. Четвертная с точкой</option>
+                                <option value="96" selected>♩ Четвертная (1/4)</option>
+                                <option value="72">♪. Восьмая с точкой</option>
+                                <option value="48">♪ Восьмая (1/8)</option>
+                                <option value="24">♬ Шестнадцатая</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>🔊 Громкость: <span id="velocityDisplay">100</span></label>
+                        <input type="range" id="velocity" value="100" min="0" max="127" 
+                               oninput="document.getElementById('velocityDisplay').textContent = this.value">
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn-add" onclick="addNote()">➕ Добавить ноту</button>
+                        <button class="btn-clear" onclick="clearNotes()">🗑️ Очистить все</button>
+                    </div>
+                </div>
+                
+                <!-- Chord Builder -->
+                <div class="chord-builder">
+                    <h4>🎹 Конструктор аккордов (одновременное звучание)</h4>
+                    <p style="font-size: 12px; margin-bottom: 10px; color: #1565c0;">Добавьте несколько нот, которые будут звучать вместе</p>
+                    <div class="chord-notes" id="chordNotes">
+                        <span style="color: #999; font-size: 12px;">Нет нот в аккорде</span>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn-add-to-chord" onclick="addToChord()">➕ В аккорд</button>
+                        <button class="btn-clear-chord" onclick="clearChord()">🔄 Очистить</button>
+                        <button class="btn-add" onclick="addChord()">✅ Добавить аккорд</button>
+                    </div>
+                </div>
+                
+                <!-- Keyboard Shortcuts -->
+                <div class="shortcuts">
+                    <h4>⌨️ Горячие клавиши</h4>
+                    <p><kbd>Enter</kbd> - добавить ноту | <kbd>Space</kbd> - воспроизвести/остановить</p>
+                </div>
+            </div>
+            
+            <!-- Right Column -->
+            <div>
+                <!-- Player Section -->
+                <div class="player-section">
+                    <h3 style="text-align: center; margin-bottom: 15px;">🎹 Проигрыватель</h3>
+                    
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalNotes">0</div>
+                            <div class="stat-label">Элементов</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalDuration">0s</div>
+                            <div class="stat-label">Длительность</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="currentTempo">120</div>
+                            <div class="stat-label">BPM</div>
+                        </div>
+                    </div>
+                    
+                    <div class="tempo-control">
+                        <span>🎚️ Темп:</span>
+                        <input type="range" id="tempoSlider" min="40" max="240" value="120" 
+                               oninput="updateTempo(this.value)">
+                        <span class="tempo-value" id="tempoValue">120 BPM</span>
+                    </div>
+                    
+                    <div class="instrument-selector">
+                        <label>🎸 Тембр:</label>
+                        <select id="waveform" onchange="updateWaveform(this.value)">
+                            <option value="sine">🎹 Синусоида (мягко)</option>
+                            <option value="square">🎸 Прямоугольник (ретро)</option>
+                            <option value="sawtooth">🎺 Пила (яркий)</option>
+                            <option value="triangle">🎻 Треугольник (теплый)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="visualizer" id="visualizer">
+                        <span>🎵</span>
+                        <div class="timeline" id="timeline"></div>
+                    </div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    
+                    <div class="piano-roll" id="pianoRoll"></div>
+                    
+                    <div class="player-controls">
+                        <button class="player-btn" id="playBtn" onclick="playMelody()" disabled>
+                            <span>▶️</span> Играть
+                        </button>
+                        <button class="player-btn" id="stopBtn" onclick="stopMelody()" disabled>
+                            <span>⏹️</span> Стоп
+                        </button>
+                        <button class="player-btn" id="loopBtn" onclick="toggleLoop()">
+                            <span id="loopIcon">🔁</span> Повтор
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="notes-section">
+            <h2>
+                <span>📝 Список нот и аккордов (<span id="noteCount">0</span>)</span>
+                <button class="player-btn" style="font-size: 12px; padding: 5px 15px;" onclick="reverseNotes()">
+                    🔄 Развернуть
+                </button>
+            </h2>
+            <div class="notes-list" id="notesList">
+                <div class="empty-state">
+                    <p>Нет добавленных нот</p>
+                    <p style="font-size: 14px; margin-top: 10px;">Добавьте ноты или выберите пресет</p>
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn-generate" id="generateBtn" onclick="generateMIDI()" disabled>
+            💾 Скачать MIDI файл
+        </button>
+    </div>
+    
+    <script>
+        let notes = [];
+        let currentChord = [];
+        let audioContext = null;
+        let isPlaying = false;
+        let shouldStop = false;
+        let currentTimeouts = [];
+        let tempo = 120;
+        let waveformType = 'sine';
+        let loopEnabled = false;
+        
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        function updateTempo(value) {
+            tempo = parseInt(value);
+            document.getElementById('tempoValue').textContent = tempo + ' BPM';
+            document.getElementById('currentTempo').textContent = tempo;
+            updateStats();
+        }
+        
+        function updateWaveform(value) {
+            waveformType = value;
+        }
+        
+        function toggleLoop() {
+            loopEnabled = !loopEnabled;
+            const icon = document.getElementById('loopIcon');
+            icon.textContent = loopEnabled ? '🔂' : '🔁';
+        }
+        
+        function playNote(frequency, duration, velocity) {
+            initAudio();
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = waveformType;
+            oscillator.frequency.value = frequency;
+            
+            const volume = velocity / 127;
+            gainNode.gain.value = volume * 0.3;
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+            
+            return oscillator;
+        }
+        
+        function playChord(noteArray, duration) {
+            const oscillators = [];
+            noteArray.forEach(noteData => {
+                const frequency = midiToFrequency(noteData.note);
+                const osc = playNote(frequency, duration, noteData.velocity);
+                oscillators.push(osc);
+            });
+            return oscillators;
+        }
+        
+        function midiToFrequency(midi) {
+            return 440 * Math.pow(2, (midi - 69) / 12);
+        }
+        
+        async function playMelody() {
+            if (notes.length === 0) return;
+            if (isPlaying) return; // Защита от повторного запуска
+            
+            // Устанавливаем флаг ДО всего остального
+            isPlaying = true;
+            shouldStop = false;
+            
+            initAudio();
+            
+            const visualizer = document.getElementById('visualizer');
+            const timeline = document.getElementById('timeline');
+            const progressFill = document.getElementById('progressFill');
+            const playBtn = document.getElementById('playBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            
+            playBtn.disabled = true;
+            stopBtn.disabled = false;
+            
+            const quarterNoteDuration = 60 / tempo;
+            const ticksPerQuarter = 96;
+            
+            updatePianoRoll();
+            
+            try {
+                do {
+                    currentTimeouts = [];
+                    
+                    for (let i = 0; i < notes.length; i++) {
+                        if (shouldStop) break;
+                        
+                        const item = notes[i];
+                        const duration = (item.duration / ticksPerQuarter) * quarterNoteDuration;
+                        
+                        const progress = ((i + 1) / notes.length) * 100;
+                        progressFill.style.width = progress + '%';
+                        
+                        const noteItems = document.querySelectorAll('.note-item');
+                        noteItems.forEach((elem, index) => {
+                            if (index === i) {
+                                elem.classList.add('playing');
+                            } else {
+                                elem.classList.remove('playing');
+                            }
+                        });
+                        
+                        if (item.isChord) {
+                            playChord(item.notes, duration);
+                            const noteNames = item.notes.map(n => n.noteText.split(' ')[0]).join(' + ');
+                            visualizer.innerHTML = `<span style="font-size: 48px;">🎹</span><br><span style="font-size: 18px;">${noteNames}</span>`;
+                        } else {
+                            const frequency = midiToFrequency(item.note);
+                            playNote(frequency, duration, item.velocity);
+                            visualizer.innerHTML = `<span style="font-size: 48px;">🎵</span><br><span style="font-size: 24px;">${item.noteText}</span>`;
+                        }
+                        
+                        timeline.textContent = `Элемент ${i + 1} из ${notes.length}`;
+                        
+                        const bars = document.querySelectorAll('.piano-bar');
+                        bars.forEach((bar, idx) => {
+                            bar.classList.toggle('active', idx === i % bars.length);
+                        });
+                        
+                        await new Promise(resolve => {
+                            const timeout = setTimeout(resolve, duration * 1000);
+                            currentTimeouts.push(timeout);
+                        });
+                    }
+                    
+                    // Очистка визуализации
+                    const noteItems = document.querySelectorAll('.note-item');
+                    noteItems.forEach(item => item.classList.remove('playing'));
+                    
+                    const bars = document.querySelectorAll('.piano-bar');
+                    bars.forEach(bar => bar.classList.remove('active'));
+                    
+                    // Пауза между повторами
+                    if (loopEnabled && !shouldStop) {
+                        await new Promise(resolve => {
+                            const timeout = setTimeout(resolve, 500);
+                            currentTimeouts.push(timeout);
+                        });
+                    }
+                    
+                } while (loopEnabled && !shouldStop);
+                
+            } finally {
+                // КРИТИЧЕСКИ ВАЖНО: сброс всегда выполняется
+                isPlaying = false;
+                shouldStop = false;
+                
+                visualizer.innerHTML = '<span>🎵</span>';
+                timeline.textContent = '';
+                progressFill.style.width = '0%';
+                
+                playBtn.disabled = false;
+                stopBtn.disabled = true;
+                
+                document.querySelectorAll('.note-item').forEach(item => {
+                    item.classList.remove('playing');
+                });
+                
+                document.querySelectorAll('.piano-bar').forEach(bar => {
+                    bar.classList.remove('active');
+                });
+            }
+        }
+        
+        function stopMelody() {
+            shouldStop = true;
+            
+            // Очищаем все таймауты
+            currentTimeouts.forEach(timeout => clearTimeout(timeout));
+            currentTimeouts = [];
+            
+            // Сброс флага
+            isPlaying = false;
+        }
+        
+        function updatePianoRoll() {
+            const pianoRoll = document.getElementById('pianoRoll');
+            pianoRoll.innerHTML = '';
+            
+            const maxBars = Math.min(notes.length, 20);
+            for (let i = 0; i < maxBars; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'piano-bar';
+                let avgVelocity;
+                if (notes[i].isChord) {
+                    avgVelocity = notes[i].notes.reduce((sum, n) => sum + n.velocity, 0) / notes[i].notes.length;
+                } else {
+                    avgVelocity = notes[i].velocity;
+                }
+                const height = (avgVelocity / 127) * 60;
+                bar.style.height = height + 'px';
+                pianoRoll.appendChild(bar);
+            }
+        }
+        
+        function addToChord() {
+            const noteValue = parseInt(document.getElementById('noteSelect').value);
+            const noteText = document.getElementById('noteSelect').options[document.getElementById('noteSelect').selectedIndex].text;
+            const velocity = parseInt(document.getElementById('velocity').value);
+            
+            if (currentChord.some(n => n.note === noteValue)) {
+                alert('Эта нота уже в аккорде!');
+                return;
+            }
+            
+            currentChord.push({
+                note: noteValue,
+                noteText: noteText,
+                velocity: velocity
+            });
+            
+            updateChordDisplay();
+            
+            const frequency = midiToFrequency(noteValue);
+            playNote(frequency, 0.5, velocity);
+        }
+        
+        function removeFromChord(index) {
+            currentChord.splice(index, 1);
+            updateChordDisplay();
+        }
+        
+        function clearChord() {
+            currentChord = [];
+            updateChordDisplay();
+        }
+        
+        function updateChordDisplay() {
+            const container = document.getElementById('chordNotes');
+            if (currentChord.length === 0) {
+                container.innerHTML = '<span style="color: #999; font-size: 12px;">Нет нот в аккорде</span>';
+            } else {
+                container.innerHTML = currentChord.map((note, index) => `
+                    <div class="chord-note-tag">
+                        ${note.noteText.split(' ')[0]}
+                        <button onclick="removeFromChord(${index})" title="Удалить">×</button>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        function addChord() {
+            if (currentChord.length === 0) {
+                alert('Добавьте ноты в аккорд!');
+                return;
+            }
+            
+            if (currentChord.length === 1) {
+                alert('В аккорде должно быть минимум 2 ноты.');
+                return;
+            }
+            
+            const duration = parseInt(document.getElementById('duration').value);
+            const durationText = document.getElementById('duration').options[document.getElementById('duration').selectedIndex].text;
+            
+            notes.push({
+                isChord: true,
+                notes: [...currentChord],
+                duration: duration,
+                durationText: durationText
+            });
+            
+            const quarterNoteDuration = 60 / tempo;
+            const ticksPerQuarter = 96;
+            const durationSeconds = (duration / ticksPerQuarter) * quarterNoteDuration;
+            playChord(currentChord, durationSeconds);
+            
+            clearChord();
+            updateNotesList();
+            updateStats();
+        }
+        
+        function addNote() {
+            const noteValue = parseInt(document.getElementById('noteSelect').value);
+            const noteText = document.getElementById('noteSelect').options[document.getElementById('noteSelect').selectedIndex].text;
+            const duration = parseInt(document.getElementById('duration').value);
+            const durationText = document.getElementById('duration').options[document.getElementById('duration').selectedIndex].text;
+            const velocity = parseInt(document.getElementById('velocity').value);
+            
+            notes.push({
+                isChord: false,
+                note: noteValue,
+                noteText: noteText,
+                duration: duration,
+                durationText: durationText,
+                velocity: velocity
+            });
+            
+            updateNotesList();
+            updateStats();
+        }
+        
+        function deleteNote(index) {
+            notes.splice(index, 1);
+            updateNotesList();
+            updateStats();
+        }
+        
+        function previewNote(index) {
+            const item = notes[index];
+            const quarterNoteDuration = 60 / tempo;
+            const ticksPerQuarter = 96;
+            const duration = (item.duration / ticksPerQuarter) * quarterNoteDuration;
+            
+            if (item.isChord) {
+                playChord(item.notes, duration);
+            } else {
+                const frequency = midiToFrequency(item.note);
+                playNote(frequency, duration, item.velocity);
+            }
+        }
+        
+        function clearNotes() {
+            if (notes.length > 0 && !confirm('Вы уверены?')) {
+                return;
+            }
+            notes = [];
+            updateNotesList();
+            updateStats();
+        }
+        
+        function reverseNotes() {
+            notes.reverse();
+            updateNotesList();
+        }
+        
+        function updateStats() {
+            const quarterNoteDuration = 60 / tempo;
+            const ticksPerQuarter = 96;
+            let totalSeconds = 0;
+            
+            notes.forEach(item => {
+                totalSeconds += (item.duration / ticksPerQuarter) * quarterNoteDuration;
+            });
+            
+            document.getElementById('totalNotes').textContent = notes.length;
+            document.getElementById('totalDuration').textContent = totalSeconds.toFixed(1) + 's';
+        }
+        
+        function updateNotesList() {
+            const list = document.getElementById('notesList');
+            const generateBtn = document.getElementById('generateBtn');
+            const playBtn = document.getElementById('playBtn');
+            const noteCount = document.getElementById('noteCount');
+            
+            noteCount.textContent = notes.length;
+            
+            if (notes.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <p>Нет добавленных нот</p>
+                        <p style="font-size: 14px; margin-top: 10px;">Добавьте ноты или выберите пресет</p>
+                    </div>
+                `;
+                generateBtn.disabled = true;
+                playBtn.disabled = true;
+                document.getElementById('pianoRoll').innerHTML = '';
+            } else {
+                list.innerHTML = notes.map((item, index) => {
+                    let displayText;
+                    let durationStr = item.durationText.replace(/[🎵𝅗𝅥♩♪♬.]/g, '').trim();
+                    
+                    if (item.isChord) {
+                        const noteNames = item.notes.map(n => n.noteText.split(' ')[0]).join(', ');
+                        displayText = `<strong>🎹 ${noteNames}</strong>`;
+                    } else {
+                        displayText = `<strong>${item.noteText}</strong>`;
+                    }
+                    
+                    return `
+                        <div class="note-item ${item.isChord ? 'chord' : ''}" onclick="previewNote(${index})">
+                            <div class="note-info">
+                                <span class="note-number">${index + 1}</span>
+                                ${displayText}
+                                ${item.isChord ? '<span class="chord-indicator">' + item.notes.length + ' НОТ</span>' : ''}
+                                <div class="note-details">
+                                    ${durationStr} ${!item.isChord ? `| Громкость: ${item.velocity}` : ''}
+                                </div>
+                            </div>
+                            <div class="note-actions">
+                                <button class="btn-preview" onclick="event.stopPropagation(); previewNote(${index})">▶️</button>
+                                <button class="btn-delete" onclick="event.stopPropagation(); deleteNote(${index})">✕</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                generateBtn.disabled = false;
+                playBtn.disabled = false;
+                updatePianoRoll();
+            }
+        }
+        
+        function loadPreset(type) {
+            notes = [];
+            
+            const presets = {
+                'scale': [
+                    {isChord: false, note: 60, noteText: 'C4 (До)', duration: 96, durationText: '♩ Четвертная (1/4)', velocity: 100},
+                    {isChord: false, note: 62, noteText: 'D4 (Ре)', duration: 96, durationText: '♩ Четвертная (1/4)', velocity: 100},
+                    {isChord: false, note: 64, noteText: 'E4 (Ми)', duration: 96, durationText: '♩ Четвертная (1/4)', velocity: 100},
+                    {isChord: false, note: 65, noteText: 'F4 (Фа)', duration: 96, durationText: '♩ Четвертная (1/4)', velocity: 100},
+                    {isChord: false, note: 67, noteText: 'G4 (Соль)', duration: 96, durationText: '♩ Четвертная (1/4)', velocity: 100},
+                    {isChord: false, note: 69, noteText: 'A4 (Ля)', duration: 96, durationText: '♩ Четвертная (1/4)', velocity: 100},
+                    {isChord: false, note: 71, noteText: 'B4 (Си)', duration: 96, durationText: '♩ Четвертная (1/4)', velocity: 100},
+                    {isChord: false, note: 72, noteText: 'C5 (До)', duration: 192, durationText: '𝅗𝅥 Половинная (1/2)', velocity: 110}
+                ],
+                'chords': [
+                    {
+                        isChord: true,
+                        notes: [
+                            {note: 60, noteText: 'C4 (До)', velocity: 100},
+                            {note: 64, noteText: 'E4 (Ми)', velocity: 100},
+                            {note: 67, noteText: 'G4 (Соль)', velocity: 100}
+                        ],
+                        duration: 192,
+                        durationText: '𝅗𝅥 Половинная (1/2)'
+                    },
+                    {
+                        isChord: true,
+                        notes: [
+                            {note: 65, noteText: 'F4 (Фа)', velocity: 100},
+                            {note: 69, noteText: 'A4 (Ля)', velocity: 100},
+                            {note: 72, noteText: 'C5 (До)', velocity: 100}
+                        ],
+                        duration: 192,
+                        durationText: '𝅗𝅥 Половинная (1/2)'
+                    },
+                    {
+                        isChord: true,
+                        notes: [
+                            {note: 67, noteText: 'G4 (Соль)', velocity: 100},
+                            {note: 71, noteText: 'B4 (Си)', velocity: 100},
+                            {note: 74, noteText: 'D5 (Ре)', velocity: 100}
+                        ],
+                        duration: 192,
+                        durationText: '𝅗𝅥 Половинная (1/2)'
+                    },
+                    {
+                        isChord: true,
+                        notes: [
+                            {note: 60, noteText: 'C4 (До)', velocity: 110},
+                            {note: 64, noteText: 'E4 (Ми)', velocity: 110},
+                            {note: 67, noteText: 'G4 (Соль)', velocity: 110}
+                        ],
+                        duration: 384,
+                        durationText: '🎵 Целая (1)'
+                    }
+                ],
+                'melody': [
+                    {isChord: false, note: 60, noteText: 'C4 (До)', duration: 96, durationText: '♩ Четвертная (1/4)', velocity: 90},
+                    {isChord: false, note: 64, noteText: 'E4 (Ми)', duration: 96, durationText: '♩ Четвертная (1/4)', velocity: 95},
+                    {isChord: false, note: 67, noteText: 'G4 (Соль)', duration: 96, durationText: '♩ Четвертная (1/4)', velocity: 100},
+                    {isChord: false, note: 72, noteText: 'C5 (До)', duration: 96, durationText: '♩ Четвертная (1/4)', velocity: 105},
+                    {isChord: false, note: 67, noteText: 'G4 (Соль)', duration: 96, durationText: '♩ Четвертная (1/4)', velocity: 100},
+                    {isChord: false, note: 64, noteText: 'E4 (Ми)', duration: 96, durationText: '♩ Четвертная (1/4)', velocity: 95},
+                    {isChord: false, note: 60, noteText: 'C4 (До)', duration: 192, durationText: '𝅗𝅥 Половинная (1/2)', velocity: 90}
+                ],
+                'piano': [
+                    {isChord: false, note: 72, noteText: 'C5 (До)', duration: 96, durationText: '♩ Четвертная (1/4)', velocity: 100},
+                    {
+                        isChord: true,
+                        notes: [
+                            {note: 48, noteText: 'C3 (До)', velocity: 70},
+                            {note: 52, noteText: 'E3 (Ми)', velocity: 70},
+                            {note: 55, noteText: 'G3 (Соль)', velocity: 70}
+                        ],
+                        duration: 96,
+                        durationText: '♩ Четвертная (1/4)'
+                    },
+                    {isChord: false, note: 76, noteText: 'E5 (Ми)', duration: 96, durationText: '♩ Четвертная (1/4)', velocity: 105},
+                    {
+                        isChord: true,
+                        notes: [
+                            {note: 57, noteText: 'A3 (Ля)', velocity: 70},
+                            {note: 60, noteText: 'C4 (До)', velocity: 70},
+                            {note: 64, noteText: 'E4 (Ми)', velocity: 70}
+                        ],
+                        duration: 96,
+                        durationText: '♩ Четвертная (1/4)'
+                    },
+                    {
+                        isChord: true,
+                        notes: [
+                            {note: 48, noteText: 'C3 (До)', velocity: 80},
+                            {note: 60, noteText: 'C4 (До)', velocity: 90},
+                            {note: 64, noteText: 'E4 (Ми)', velocity: 90},
+                            {note: 67, noteText: 'G4 (Соль)', velocity: 90},
+                            {note: 72, noteText: 'C5 (До)', velocity: 100}
+                        ],
+                        duration: 384,
+                        durationText: '🎵 Целая (1)'
+                    }
+                ]
+            };
+            
+            notes = presets[type] || [];
+            updateNotesList();
+            updateStats();
+        }
+        
+        function toVariableLength(value) {
+            const bytes = [];
+            bytes.push(value & 0x7F);
+            
+            value >>= 7;
+            while (value > 0) {
+                bytes.unshift((value & 0x7F) | 0x80);
+                value >>= 7;
+            }
+            
+            return bytes;
+        }
+        
+        function generateMIDI() {
+            if (notes.length === 0) {
+                alert('Добавьте хотя бы одну ноту!');
+                return;
+            }
+            
+            try {
+                const header = [
+                    0x4d, 0x54, 0x68, 0x64,
+                    0x00, 0x00, 0x00, 0x06,
+                    0x00, 0x00,
+                    0x00, 0x01,
+                    0x00, 0x60
+                ];
+                
+                const events = [];
+                
+                const microsecondsPerQuarter = Math.floor(60000000 / tempo);
+                const tempoBytes = [
+                    (microsecondsPerQuarter >> 16) & 0xFF,
+                    (microsecondsPerQuarter >> 8) & 0xFF,
+                    microsecondsPerQuarter & 0xFF
+                ];
+                
+                events.push(...[0x00, 0xFF, 0x51, 0x03, ...tempoBytes]);
+                
+                notes.forEach((item, index) => {
+                    if (item.isChord) {
+                        item.notes.forEach((noteData, noteIndex) => {
+                            events.push(0x00);
+                            events.push(0x90);
+                            events.push(noteData.note);
+                            events.push(noteData.velocity);
+                        });
+                        
+                        const deltaTime = toVariableLength(item.duration);
+                        events.push(...deltaTime);
+                        events.push(0x80);
+                        events.push(item.notes[0].note);
+                        events.push(0x00);
+                        
+                        for (let i = 1; i < item.notes.length; i++) {
+                            events.push(0x00);
+                            events.push(0x80);
+                            events.push(item.notes[i].note);
+                            events.push(0x00);
+                        }
+                    } else {
+                        events.push(0x00);
+                        events.push(0x90);
+                        events.push(item.note);
+                        events.push(item.velocity);
+                        
+                        const deltaTime = toVariableLength(item.duration);
+                        events.push(...deltaTime);
+                        events.push(0x80);
+                        events.push(item.note);
+                        events.push(0x00);
+                    }
+                });
+                
+                events.push(...[0x00, 0xFF, 0x2F, 0x00]);
+                
+                const trackLength = events.length;
+                const track = [
+                    0x4d, 0x54, 0x72, 0x6b,
+                    (trackLength >> 24) & 0xFF,
+                    (trackLength >> 16) & 0xFF,
+                    (trackLength >> 8) & 0xFF,
+                    trackLength & 0xFF
+                ];
+                
+                const midiData = new Uint8Array([...header, ...track, ...events]);
+                
+                const blob = new Blob([midiData], { type: 'audio/midi' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `melody_${Date.now()}.mid`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                alert('✅ MIDI файл успешно сгенерирован и загружен!');
+                
+            } catch (error) {
+                alert('❌ Ошибка при генерации MIDI: ' + error.message);
+                console.error('Ошибка:', error);
+            }
+        }
+        
+        updateNotesList();
+        updateStats();
+        updateChordDisplay();
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+                if (e.key === 'Enter') {
+                    addNote();
+                }
+                return;
+            }
+            
+            if (e.key === ' ') {
+                e.preventDefault();
+                if (isPlaying) {
+                    stopMelody();
+                } else if (notes.length > 0) {
+                    playMelody();
+                }
+            }
+        });
+        
+        document.getElementById('velocity').addEventListener('input', function(e) {
+            document.getElementById('velocityDisplay').textContent = e.target.value;
+        });
+    </script>
+</body>
+</html>
